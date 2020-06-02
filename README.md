@@ -1,0 +1,3 @@
+# tsutenkaku_descriminator
+
+OUCCのhackasonにて
