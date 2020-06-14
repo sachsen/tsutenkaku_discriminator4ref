@@ -1,1 +1,5 @@
 .idea/
+.vs/
+tsutenkaku_descriminator/tsutenkaku_descriminator.pyproj
+CodeGraphData/
+*.sln
