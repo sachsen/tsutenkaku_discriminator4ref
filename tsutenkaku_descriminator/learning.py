@@ -7,6 +7,7 @@ from tensorflow import keras
 from tensorflow.keras import layers, models,optimizers
 import optuna
 import tensorflow.keras.backend as K
+from tensorflow.keras.callbacks import EarlyStopping
 
 class DataManager:
     #画像が保存されているルートディレクトリのパス
@@ -66,7 +67,7 @@ class DataManager:
         xy = (X_train, X_test, y_train, y_test)
         #データを保存する（データの名前を「img_data.npy」としている）
         np.save("img_data.npy", xy)
-        return xy
+        return xy,categories
         
     #引用 https://note.nkmk.me/python-pillow-square-circle-thumbnail/
     def expand2square(self,pil_img, background_color):
@@ -82,8 +83,12 @@ class DataManager:
             result.paste(pil_img, ((height - width) // 2, 0))
             return result
 class Learning:
-    def __init__(self, XY):
+    def __init__(self, XY,category):
         self.x_train, self.x_test, self.y_train, self.y_test=XY
+         nb_classes=len(category)
+         #kerasで扱えるようにcategoriesをベクトルに変換
+        y_train = np_utils.to_categorical(y_train, nb_classes)
+        y_test  = np_utils.to_categorical(y_test, nb_classes)
     def createModel(self,num_layer, activation, mid_units, num_filters):
         """
         #モデル層を積み重ねる形式の記述方法 addで表記できるため便利
@@ -157,26 +162,57 @@ class Learning:
             model.compile(optimizer=optimizer,
                   loss="categorical_crossentropy",
                   metrics=["accuracy"])#評価関数は正答率
+            #学習が進まなくなったときに止める
+            early_stopping = EarlyStopping(monitor='val_loss', mode='min', patience=10)
 
             #学習実行
             #verbose ログ出力の指定。「0」だとログが出ないの設定。 epoch=学習する回数,batch_size=学習するデータサイズ validation_dataは検証用データ
-            history = model.fit(self.train_x, self.train_y,  epochs=5, batch_size=6, validation_data=(self.x_test,self.y_test))
+            history = model.fit(self.train_x, self.train_y,  epochs=5, batch_size=6, validation_data=(self.x_test,self.y_test),callbacks=[early_stopping])
+            self.history=history
+            #modelの保存
+            json_string = model.model.to_json()
+            open('model.json', 'w').write(json_string)
+            #重みの保存
+
+            hdf5_file = "model.hdf5"
+            model.model.save_weights(hdf5_file)
 
             #検証用データに対する正答率が最大となるハイパーパラメータを求める
-            return 1 - history.history["val_acc"][-1]
+            return 1 - history.history["val_acc"][-1] #正答率最大→戻り値最小
+        def makeGraph(self):#学習推移を出力
+            acc = model.history['acc']
+            val_acc = model.history['val_acc']
+            loss = model.history['loss']
+            val_loss = model.history['val_loss']
+
+            epochs = range(len(acc))
+
+            plt.plot(epochs, acc, 'bo', label='Training acc')
+            plt.plot(epochs, val_acc, 'b', label='Validation acc')
+            plt.title('Training and validation accuracy')
+            plt.legend()
+            plt.savefig('精度を示すグラフのファイル名')
+
+            plt.figure()
+
+            plt.plot(epochs, loss, 'bo', label='Training loss')
+            plt.plot(epochs, val_loss, 'b', label='Validation loss')
+            plt.title('Training and validation loss')
+            plt.legend()
+            plt.savefig('損失値を示すグラフのファイル名')
         def optimizeModel(self):
             #studyオブジェクトの作成
             study = optuna.create_study()
             #最適化実行
             study.optimize(objective, n_trials=100)#試行回数
             #最適化したハイパーパラメータの確認←これが一番知りたかったやつ。
-            study.best_params
-
+            print(study.best_params)
+            np.save("optimizedParam.npy", study.best_params)
             #最適化後の目的関数値 目的関数が最適化時どんな値(戻り値)になったか。
-            study.best_value
-
+            print(study.best_value)
+            
             #全試行の確認
-            study.trials
+            print(study.trials)
 
 
 
@@ -192,8 +228,8 @@ def main():
     #tfdebug.testGPURecognization()
 
     dataManager=DataManager()
-    xy= dataManager.arrangeData()
-    learning=Learning(xy)
+    xy,category= dataManager.arrangeData()
+    learning=Learning(xy,category)
 
 
 
