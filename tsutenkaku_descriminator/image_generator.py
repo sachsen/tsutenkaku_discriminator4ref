@@ -1,4 +1,5 @@
-#‰æ‘œ‚Ì…‘‚µ
+# coding: utf-8
+#ç”»åƒã®æ°´å¢—ã—
 
 import os
 import glob
@@ -6,35 +7,35 @@ import numpy as np
 import learning
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array, array_to_img
 
-# ‰æ‘œ‚ğŠg’£‚·‚éŠÖ”
+# ç”»åƒã‚’æ‹¡å¼µã™ã‚‹é–¢æ•°
 def draw_images(generator, x, dir_name, index):
     save_name = 'extened-' + str(index)
     g = generator.flow(x, batch_size=1, save_to_dir=output_dir,
                        save_prefix=save_name, save_format='jpeg')
 
-    # 1‚Â‚Ì“ü—Í‰æ‘œ‚©‚ç‰½–‡Šg’£‚·‚é‚©‚ğw’èi¡‰ñ‚Í50–‡j
+    # 1ã¤ã®å…¥åŠ›ç”»åƒã‹ã‚‰ä½•æšæ‹¡å¼µã™ã‚‹ã‹ã‚’æŒ‡å®šï¼ˆä»Šå›ã¯50æšï¼‰
     for i in range(50):
         bach = g.next()
 
 
 def run(category):
-    # o—ÍæƒfƒBƒŒƒNƒgƒŠ‚Ìİ’è
+    # å‡ºåŠ›å…ˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®è¨­å®š
     output_dir = f'data_generated_{category}'
 
     if not(os.path.exists(output_dir)):
         os.mkdir(output_dir)
 
-    # Šg’£‚·‚é‰æ‘œ‚Ì“Ç‚İ‚İ
-    images = glob.glob(os.path.join(f'data/{category}', "*.jpg"))#ƒtƒ@ƒCƒ‹’¼‘O‚Ì/‚Í‚¢‚ç‚È‚¢‚ç‚µ‚¢
+    # æ‹¡å¼µã™ã‚‹ç”»åƒã®èª­ã¿è¾¼ã¿
+    images = glob.glob(os.path.join(f'data/{category}', "*.jpg"))#ãƒ•ã‚¡ã‚¤ãƒ«ç›´å‰ã®/ã¯ã„ã‚‰ãªã„ã‚‰ã—ã„
 
-    # ImageDataGenerator‚ğ’è‹`
+    # ImageDataGeneratorã‚’å®šç¾©
     datagen = ImageDataGenerator(rotation_range=30,
                                 width_shift_range=20,
                                 height_shift_range=0.,
                                 zoom_range=0.1,
                                 horizontal_flip=True,
                                 vertical_flip=True)
-    # “Ç‚İ‚ñ‚¾‰æ‘œ‚ğ‡‚ÉŠg’£
+    # èª­ã¿è¾¼ã‚“ã ç”»åƒã‚’é †ã«æ‹¡å¼µ
     for i in range(len(images)):
         img = load_img(images[i])
         img = img.resize((150, 150))

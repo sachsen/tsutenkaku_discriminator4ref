@@ -3,3 +3,9 @@
 tsutenkaku_descriminator/tsutenkaku_descriminator.pyproj
 CodeGraphData/
 *.sln
+tsutenkaku_descriminator/data/graph_accuracy/*
+tsutenkaku_descriminator/data/graph_loss/*
+tsutenkaku_descriminator/data/log/*
+tsutenkaku_descriminator/data/taiyo_no_to/*
+tsutenkaku_descriminator/data/tsutenkaku/*
+
