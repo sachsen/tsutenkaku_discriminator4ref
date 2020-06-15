@@ -10,7 +10,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, i
 # 画像を拡張する関数
 def draw_images(generator, x, dir_name, index):
     save_name = 'extened-' + str(index)
-    g = generator.flow(x, batch_size=1, save_to_dir=output_dir,
+    g = generator.flow(x, batch_size=1, save_to_dir=dir_name,
                        save_prefix=save_name, save_format='jpeg')
 
     # 1つの入力画像から何枚拡張するかを指定（今回は50枚）
@@ -20,7 +20,7 @@ def draw_images(generator, x, dir_name, index):
 
 def run(category):
     # 出力先ディレクトリの設定
-    output_dir = f'data_generated_{category}'
+    output_dir = f'data/data_generated_{category}'
 
     if not(os.path.exists(output_dir)):
         os.mkdir(output_dir)
@@ -44,7 +44,8 @@ def run(category):
         draw_images(datagen, x, output_dir, i)
 
 def main():
-    category=learning.DataManager.getCategory
+    dataManager=learning.DataManager()
+    category=dataManager.getCategory()
     for cat in category:
         run(cat)
     

@@ -29,7 +29,7 @@ class DataManager:
     allfiles = []
     #外部参照用
     def getCategory(self):
-        return categories
+        return self.categories
     #画像データごとにadd_sample()を呼び出し、X(画像np配列データ),Y(カテゴリーインデックス)の配列を返す関数
     def make_sample(self,files):
         global X, Y
@@ -240,6 +240,11 @@ class Learning:
             
         #全試行の確認
         #print(study.trials)
+    def learnWithOptimizedParam(self):
+        bestparam=np.load("optimizedParam.npy")
+        print(bestparam)
+
+
 
 
 class TfDebug:
@@ -251,11 +256,14 @@ def main():
     #GPUが認識されているか確認
     #tfdebug=TfDebug()
     #tfdebug.testGPURecognization()
-
+    """
     dataManager=DataManager()
     xy,category= dataManager.arrangeData()
     learning=Learning(xy,category)
     learning.optimizeModel()
+    """
+    learning=Learning(xy,category)
+    learning.learnWithOptimizedParam()
 
 
 
