@@ -13,6 +13,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, i
 from tensorflow.keras.layers import Convolution2D, Input, Dense, GlobalAveragePooling2D
 from tensorflow.keras.models import Model
 import matplotlib.pyplot as plt
+import pickle
 
 class DataManager:
     #画像が保存されているルートディレクトリのパス
@@ -184,16 +185,16 @@ class Learning:
         self.history=history
         #modelの保存
         json_string = history.model.to_json()
-        open('model.json', 'w').write(json_string)
+        open('./data/param/model.json', 'w').write(json_string)
         #重みの保存
 
-        hdf5_file = "model.hdf5"
+        hdf5_file = "./data/param/weight.hdf5"
         history.model.save_weights(hdf5_file)
         self.makeGraph()
         #検証用データに対する正答率が最大となるハイパーパラメータを求める
         return 1 - history.history["val_accuracy"][-1] #正答率最大→戻り値最小
     def makeGraph(self):#学習推移を出力
-        print(self.history.history.keys())
+        #print(self.history.history.keys())
 
         acc = self.history.history['accuracy']
         val_acc = self.history.history['val_accuracy']
@@ -219,8 +220,9 @@ class Learning:
         path_w = f'data/log/log_{self.tryDataNum}.txt'
 
         crlf="\n"
+        
 
-        s = f'num_layer:{crlf}{self.num_layer}{crlf} activation:{crlf}{self.activation}{crlf} mid_units: {crlf} {self.mid_units}{crlf} num_filters{crlf} val_acc: {val_acc}{crlf}'
+        s = f'num_layer:{crlf}{self.num_layer}{crlf} activation:{crlf}{self.activation}{crlf} mid_units: {crlf} {self.mid_units}{crlf} num_filters:{crlf}{self.num_filters}{crlf} val_acc: {val_acc}{crlf}'
 
         with open(path_w, mode='w') as f:
             f.write(s)
@@ -233,16 +235,45 @@ class Learning:
         study.optimize(self.objective, n_trials=100)#試行回数
         #最適化したハイパーパラメータの確認←これが一番知りたかったやつ。
         print(study.best_params)
-
-        np.save("optimizedParam.npy", study.best_params)#←これnumpy使う意味皆無だと思う。
+        print(study.best_params["activation"])
+        #best param(dictionary形式)の保存
+        with open("./data/param/bestparam.pickle", mode='wb') as f:
+            pickle.dump(study.best_params,f)
+        
         #最適化後の目的関数値 目的関数が最適化時どんな値(戻り値)になったか。
         print(study.best_value)
             
         #全試行の確認
         #print(study.trials)
     def learnWithOptimizedParam(self):
-        bestparam=np.load("optimizedParam.npy")
+        with open("./data/param/bestparam.pickle", mode='rb') as f:#withはスコープを生成しない
+            bestparam = pickle.load(f)
+        
         print(bestparam)
+
+        num_filters=[]
+        for ss in bestparam.keys():
+            if "num_filter" in ss:
+                num_filters.append(int(bestparam[ss]))
+
+        #ここら辺の説明は既出なので割愛
+        model = self.createModel(bestparam["num_layer"], bestparam["activation"], bestparam["mid_units"], num_filters)
+        model.compile(optimizer=bestparam["optimizer"],
+                loss="binary_crossentropy",
+                metrics=["accuracy"])
+        
+        early_stopping = EarlyStopping(monitor='val_loss', mode='min', patience=10)
+        history = model.fit(self.x_train, self.y_train,  epochs=5, batch_size=6, validation_data=(self.x_test,self.y_test),callbacks=[early_stopping])
+        self.history=history
+        #modelの保存
+        json_string = history.model.to_json()
+        open('./data/param/optimizedmodel.json', 'w').write(json_string)
+        #重みの保存
+
+        hdf5_file = "./data/param/optimizedModelWeight.hdf5"
+        history.model.save_weights(hdf5_file)
+        self.tryDataNum=-1
+        self.makeGraph()
 
 
 
@@ -256,16 +287,25 @@ def main():
     #GPUが認識されているか確認
     #tfdebug=TfDebug()
     #tfdebug.testGPURecognization()
-    """
+    
+    #最適ハイパーパラメータの探索
+    #optimizeModel()
+
+    #最適ハイパーパラメータを使用した学習モデルの構築
+    #最適化探索が終わっていれば最適パラメータは保存されている。
+    createOptimizedModel()
+
+def optimizeModel():
     dataManager=DataManager()
     xy,category= dataManager.arrangeData()
     learning=Learning(xy,category)
     learning.optimizeModel()
-    """
+def createOptimizedModel():
+    dataManager=DataManager()
+    category=dataManager.getCategory()
+    xy=np.load("img_data.npy", allow_pickle=True)
     learning=Learning(xy,category)
     learning.learnWithOptimizedParam()
-
-
 
 if __name__ == "__main__":
     main()
