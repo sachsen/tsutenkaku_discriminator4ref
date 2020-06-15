@@ -8,6 +8,7 @@ from tensorflow.keras import layers, models,optimizers
 import optuna
 import tensorflow.keras.backend as K
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array, array_to_img
 
 class DataManager:
     #画像が保存されているルートディレクトリのパス
@@ -22,7 +23,9 @@ class DataManager:
 
     #全画像データ(categoryに対応する番号,画像名?のセット)格納用配列
     allfiles = []
-
+    #外部参照用
+    def getCategory(self):
+        return categories
     #画像データごとにadd_sample()を呼び出し、X(画像np配列データ),Y(カテゴリーインデックス)の配列を返す関数
     def make_sample(self,files):
         global X, Y
