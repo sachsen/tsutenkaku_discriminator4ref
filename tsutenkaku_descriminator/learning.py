@@ -84,11 +84,13 @@ class DataManager:
             return result
 class Learning:
     def __init__(self, XY,category):
-        self.x_train, self.x_test, self.y_train, self.y_test=XY
-         nb_classes=len(category)
-         #kerasで扱えるようにcategoriesをベクトルに変換
-        y_train = np_utils.to_categorical(y_train, nb_classes)
-        y_test  = np_utils.to_categorical(y_test, nb_classes)
+
+        self.x_train, self.x_test, self.y_train,self.y_test=XY
+        nb_classes=len(category)
+        #kerasで扱えるようにcategoriesをベクトルに変換
+        self.y_train = np_utils.to_categorical(y_train, nb_classes)
+        self.y_test  = np_utils.to_categorical(y_test, nb_classes)
+        self.tryDataNum=0
     def createModel(self,num_layer, activation, mid_units, num_filters):
         """
         #モデル層を積み重ねる形式の記述方法 addで表記できるため便利
@@ -134,87 +136,99 @@ class Learning:
         x = Dense(units=10, activation="softmax")(x)
 
         model = Model(inputs=inputs, outputs=x)
+        self.num_layer=num_layer
+        self.activation=activation
+        self.mid_units=mid_units
+        self.num_filters=num_filters
         return model
         
         
 
-        def objective(self,trial):#学習する目的関数の設定
-            #セッションのクリア
-            K.clear_session()
+    def objective(self,trial):#学習する目的関数の設定
+        #セッションのクリア
+        K.clear_session()
 
-            #最適化するパラメータの設定
-            #畳込み層の数
-            num_layer = trial.suggest_int("num_layer", 3, 7)#3~7
+        #最適化するパラメータの設定
+        #畳込み層の数
+        num_layer = trial.suggest_int("num_layer", 3, 7)#3~7
 
-            #FC(全結合)層のユニット数
-            mid_units = int(trial.suggest_discrete_uniform("mid_units", 100, 500, 100))#第三引数はVBにおけるstep。間隔。
+        #FC(全結合)層のユニット数
+        mid_units = int(trial.suggest_discrete_uniform("mid_units", 100, 500, 100))#第三引数はVBにおけるstep。間隔。
 
-            #各畳込み層のフィルタ数
-            num_filters = [int(trial.suggest_discrete_uniform("num_filter_"+str(i), 32, 256, 32)) for i in range(num_layer)]
+        #各畳込み層のフィルタ数
+        num_filters = [int(trial.suggest_discrete_uniform("num_filter_"+str(i), 32, 256, 32)) for i in range(num_layer)]
 
-            #活性化関数
-            activation = trial.suggest_categorical("activation", ["relu", "sigmoid", "tanh"])
+        #活性化関数
+        activation = trial.suggest_categorical("activation", ["relu", "sigmoid", "tanh"])
 
-            #optimizer
-            optimizer = trial.suggest_categorical("optimizer", ["sgd", "adam", "rmsprop"])
+        #optimizer
+        optimizer = trial.suggest_categorical("optimizer", ["sgd", "adam", "rmsprop"])
 
-            model = createModel(num_layer, activation, mid_units, num_filters)
-            model.compile(optimizer=optimizer,
-                  loss="categorical_crossentropy",
-                  metrics=["accuracy"])#評価関数は正答率
-            #学習が進まなくなったときに止める
-            early_stopping = EarlyStopping(monitor='val_loss', mode='min', patience=10)
+        model = createModel(num_layer, activation, mid_units, num_filters)
+        model.compile(optimizer=optimizer,
+                loss="categorical_crossentropy",
+                metrics=["accuracy"])#評価関数は正答率
+        #学習が進まなくなったときに止める
+        early_stopping = EarlyStopping(monitor='val_loss', mode='min', patience=10)
 
-            #学習実行
-            #verbose ログ出力の指定。「0」だとログが出ないの設定。 epoch=学習する回数,batch_size=学習するデータサイズ validation_dataは検証用データ
-            history = model.fit(self.train_x, self.train_y,  epochs=5, batch_size=6, validation_data=(self.x_test,self.y_test),callbacks=[early_stopping])
-            self.history=history
-            #modelの保存
-            json_string = model.model.to_json()
-            open('model.json', 'w').write(json_string)
-            #重みの保存
+        #学習実行
+        #verbose ログ出力の指定。「0」だとログが出ないの設定。 epoch=学習する回数,batch_size=学習するデータサイズ validation_dataは検証用データ
+        history = model.fit(self.train_x, self.train_y,  epochs=5, batch_size=6, validation_data=(self.x_test,self.y_test),callbacks=[early_stopping])
+        self.history=history
+        #modelの保存
+        json_string = model.model.to_json()
+        open('model.json', 'w').write(json_string)
+        #重みの保存
 
-            hdf5_file = "model.hdf5"
-            model.model.save_weights(hdf5_file)
+        hdf5_file = "model.hdf5"
+        model.model.save_weights(hdf5_file)
+        makeGraph(history.history["val_acc"][-1])
+        #検証用データに対する正答率が最大となるハイパーパラメータを求める
+        return 1 - history.history["val_acc"][-1] #正答率最大→戻り値最小
+    def makeGraph(self,val_acc):#学習推移を出力
+        acc = self.history.history['acc']
+        val_acc = self.history.history['val_acc']
+        loss = self.history.history['loss']
+        val_loss = self.history.history['val_loss']
 
-            #検証用データに対する正答率が最大となるハイパーパラメータを求める
-            return 1 - history.history["val_acc"][-1] #正答率最大→戻り値最小
-        def makeGraph(self):#学習推移を出力
-            acc = model.history['acc']
-            val_acc = model.history['val_acc']
-            loss = model.history['loss']
-            val_loss = model.history['val_loss']
+        epochs = range(len(acc))
 
-            epochs = range(len(acc))
+        plt.plot(epochs, acc, 'bo', label='Training acc')
+        plt.plot(epochs, val_acc, 'b', label='Validation acc')
+        plt.title('Training and validation accuracy')
+        plt.legend()
+        plt.savefig(f'accuracy_{self.tryDataNum}')
 
-            plt.plot(epochs, acc, 'bo', label='Training acc')
-            plt.plot(epochs, val_acc, 'b', label='Validation acc')
-            plt.title('Training and validation accuracy')
-            plt.legend()
-            plt.savefig('精度を示すグラフのファイル名')
+        plt.figure()
 
-            plt.figure()
+        plt.plot(epochs, loss, 'bo', label='Training loss')
+        plt.plot(epochs, val_loss, 'b', label='Validation loss')
+        plt.title('Training and validation loss')
+        plt.legend()
+        plt.savefig(f'loss_{self.tryDataNum}')
+        #ログファイル書き出し
+        path_w = f'data/log/log_{self.tryDataNum}.txt'
 
-            plt.plot(epochs, loss, 'bo', label='Training loss')
-            plt.plot(epochs, val_loss, 'b', label='Validation loss')
-            plt.title('Training and validation loss')
-            plt.legend()
-            plt.savefig('損失値を示すグラフのファイル名')
-        def optimizeModel(self):
-            #studyオブジェクトの作成
-            study = optuna.create_study()
-            #最適化実行
-            study.optimize(objective, n_trials=100)#試行回数
-            #最適化したハイパーパラメータの確認←これが一番知りたかったやつ。
-            print(study.best_params)
-            np.save("optimizedParam.npy", study.best_params)
-            #最適化後の目的関数値 目的関数が最適化時どんな値(戻り値)になったか。
-            print(study.best_value)
+        s = f'num_layer:\n{self.num_layer}\n activation:\n{self.activation}\n mid_units:\n{mid_units\n num_filters\n val_acc: {val_acc}\n}'
+
+        with open(path_w, mode='w') as f:
+            f.write(s)
+        self.tryDataNum+=1
+
+    def optimizeModel(self):
+        #studyオブジェクトの作成
+        study = optuna.create_study()
+        #最適化実行
+        study.optimize(objective, n_trials=100)#試行回数
+        #最適化したハイパーパラメータの確認←これが一番知りたかったやつ。
+        print(study.best_params)
+
+        np.save("optimizedParam.npy", study.best_params)#←これnumpy使う意味皆無だと思う。
+        #最適化後の目的関数値 目的関数が最適化時どんな値(戻り値)になったか。
+        print(study.best_value)
             
-            #全試行の確認
-            print(study.trials)
-
-
+        #全試行の確認
+        #print(study.trials)
 
 
 class TfDebug:
@@ -230,6 +244,7 @@ def main():
     dataManager=DataManager()
     xy,category= dataManager.arrangeData()
     learning=Learning(xy,category)
+    learning.optimizeModel()
 
 
 
