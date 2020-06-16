@@ -9,3 +9,4 @@ tsutenkaku_descriminator/data/log/*
 tsutenkaku_descriminator/data/taiyo_no_to/*
 tsutenkaku_descriminator/data/tsutenkaku/*
 
+__pycache__/
