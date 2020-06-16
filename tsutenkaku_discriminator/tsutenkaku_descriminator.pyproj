@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{588e6955-d96b-435d-a405-3fb54f0fe676}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>validation.py</StartupFile>
+    <StartupFile>main.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -22,10 +22,13 @@
   <ItemGroup>
     <Compile Include="image_generator.py" />
     <Compile Include="img_gather.py" />
+    <Compile Include="img_getter_sub.py" />
     <Compile Include="learning.py" />
+    <Compile Include="main.py" />
     <Compile Include="validation.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="data\predictImg\face.jpg" />
     <Content Include="data\tsutenkaku\1.jpg" />
     <Content Include="data\tsutenkaku\2.jpg" />
     <Content Include="data\tsutenkaku\images.jpg" />
@@ -34,6 +37,7 @@
   <ItemGroup>
     <Folder Include="data\" />
     <Folder Include="data\log\" />
+    <Folder Include="data\predictImg\" />
     <Folder Include="data\taiyo_no_to\" />
     <Folder Include="data\tsutenkaku" />
   </ItemGroup>

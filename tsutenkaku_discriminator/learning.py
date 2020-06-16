@@ -304,7 +304,7 @@ def optimizeModel():
 def createOptimizedModel():
     dataManager=DataManager()
     category=dataManager.getCategory()
-    xy=np.load("img_data.npy", allow_pickle=True)
+    xy=np.load("img_data.npy" , allow_pickle=True)#
     learning=Learning(xy,category)
     learning.learnWithOptimizedParam()
 
