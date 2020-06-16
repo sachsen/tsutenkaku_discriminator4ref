@@ -266,7 +266,8 @@ class Learning:
         history = model.fit(self.x_train, self.y_train,  epochs=5, batch_size=6, validation_data=(self.x_test,self.y_test),callbacks=[early_stopping])
         self.history=history
         #modelの保存
-        json_string = history.model.to_json()
+        
+        _string = history.model.to_json()
         open('./data/param/optimizedmodel.json', 'w').write(json_string)
         #重みの保存
 

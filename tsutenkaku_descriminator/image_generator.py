@@ -38,7 +38,7 @@ def run(category):
     # 読み込んだ画像を順に拡張
     for i in range(len(images)):
         img = load_img(images[i])
-        img = img.resize((150, 150))
+        img = img.resize((250, 250))
         x = img_to_array(img)
         x = np.expand_dims(x, axis=0)
         draw_images(datagen, x, output_dir, i)
