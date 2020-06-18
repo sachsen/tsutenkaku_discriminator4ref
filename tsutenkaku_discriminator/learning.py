@@ -38,7 +38,7 @@ class DataManager:
         Y = []
         for cat, fname in files:
             self.add_sample(cat, fname)
-        return np.array(X).astype("float")/255, np.array(Y).astype("float")/255 # ついでにデータの正規化をする。
+        return np.array(X).astype(np.float16)/255, np.array(Y).astype(np.float16)/255 # ついでにデータの正規化をする。
 
     #渡された画像データを読み込んでXに格納し、また、
     #画像データに対応するcategoriesのidxをYに格納する関数
@@ -54,10 +54,17 @@ class DataManager:
         Y.append(cat)
 
     def getFiles(self):
+        self.count=0
         #カテゴリ配列の各値と、それに対応するidxを認識し、全データをallfilesにまとめる
         for idx, cat in enumerate(self.categories):
+            image_dir = self.root_dir + "/data_generated_" + cat #例えばdata/tsutenkaku
+            files = glob.glob(image_dir + "/*.jpeg") #ファイルの取得
+            for f in files:
+                self.allfiles.append((idx, f))
+                self.count+=1
+        for idx, cat in enumerate(self.categories):
             image_dir = self.root_dir + "/" + cat #例えばdata/tsutenkaku
-            files = glob.glob(image_dir + "/*.jpg") #ファイルの取得
+            files = glob.glob(image_dir + "/*.jpeg") #ファイルの取得
             for f in files:
                 self.allfiles.append((idx, f))
 
@@ -66,16 +73,27 @@ class DataManager:
 
         
         #シャッフル後、学習データ80%と検証データ20%に分ける
-        random.shuffle(self.allfiles)
+        random.shuffle(self.allfiles[0:self.count])
+        random.shuffle(self.allfiles[self.count:])
         th = math.floor(len(self.allfiles) * 0.8)
-        train = self.allfiles[0:th] #学習データ
-        test  = self.allfiles[th:] #学習データ
+        train = self.allfiles[0:self.count] #学習データ
+        test  = self.allfiles[self.count:] #学習データ
         X_train, y_train = self.make_sample(train) # X(画像np配列データ),Y(カテゴリーインデックス)
         X_test, y_test = self.make_sample(test)
         xy = (X_train, X_test, y_train, y_test)
         #データを保存する（データの名前を「img_data.npy」としている）
-        np.save("img_data.npy", xy)
-        return xy,self.categories
+        with open("./data/temp/img_x_train.pickle", mode='wb') as f:
+            pickle.dump(X_train,f,protocol=pickle.HIGHEST_PROTOCOL)
+        with open("./data/temp/img_y_train.pickle", mode='wb') as f:
+            pickle.dump(y_train,f,protocol=pickle.HIGHEST_PROTOCOL)
+        with open("./data/temp/img_x_test.pickle", mode='wb') as f:
+            pickle.dump(X_test,f,protocol=pickle.HIGHEST_PROTOCOL)
+        with open("./data/temp/img_y_test.pickle", mode='wb') as f:
+            pickle.dump(y_test,f,protocol=pickle.HIGHEST_PROTOCOL)
+
+
+        print("img_data saved!")
+        return self.categories
         
     #引用 https://note.nkmk.me/python-pillow-square-circle-thumbnail/
     def expand2square(self,pil_img, background_color):
@@ -91,9 +109,16 @@ class DataManager:
             result.paste(pil_img, ((height - width) // 2, 0))
             return result
 class Learning:
-    def __init__(self, XY,category):
-
-        self.x_train, self.x_test, self.y_train,self.y_test=XY
+    def __init__(self, category):
+        with open("./data/temp/img_x_train.pickle", mode='rb') as f:#withはスコープを生成しない
+           self.x_train = pickle.load(f)
+        with open("./data/temp/img_y_train.pickle", mode='rb') as f:
+           self.y_train = pickle.load(f)
+        with open("./data/temp/img_x_test.pickle", mode='rb') as f:
+           self.x_test = pickle.load(f)
+        with open("./data/temp/img_y_test.pickle", mode='rb') as f:
+           self.y_test = pickle.load(f)
+        #self.x_train, self.x_test, self.y_train,self.y_test=XY
         nb_classes=len(category)
         #kerasで扱えるようにcategoriesをベクトルに変換
         self.y_train = to_categorical(self.y_train, nb_classes)
@@ -267,7 +292,7 @@ class Learning:
         self.history=history
         #modelの保存
         
-        _string = history.model.to_json()
+        json_string = history.model.to_json()
         open('./data/param/optimizedmodel.json', 'w').write(json_string)
         #重みの保存
 
@@ -290,7 +315,7 @@ def main():
     #tfdebug.testGPURecognization()
     
     #最適ハイパーパラメータの探索
-    #optimizeModel()
+    optimizeModel()
 
     #最適ハイパーパラメータを使用した学習モデルの構築
     #最適化探索が終わっていれば最適パラメータは保存されている。
@@ -298,14 +323,14 @@ def main():
 
 def optimizeModel():
     dataManager=DataManager()
-    xy,category= dataManager.arrangeData()
-    learning=Learning(xy,category)
+    category= dataManager.arrangeData()
+    category=dataManager.getCategory()
+    learning=Learning(category)
     learning.optimizeModel()
 def createOptimizedModel():
     dataManager=DataManager()
     category=dataManager.getCategory()
-    xy=np.load("img_data.npy" , allow_pickle=True)#
-    learning=Learning(xy,category)
+    learning=Learning(category)
     learning.learnWithOptimizedParam()
 
 if __name__ == "__main__":

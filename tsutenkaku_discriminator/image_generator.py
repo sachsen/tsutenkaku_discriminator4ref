@@ -26,7 +26,7 @@ def run(category):
         os.mkdir(output_dir)
 
     # 拡張する画像の読み込み
-    images = glob.glob(os.path.join(f'data/{category}', "*.jpg"))#ファイル直前の/はいらないらしい
+    images = glob.glob(os.path.join(f'data/{category}', "*.jpeg"))#ファイル直前の/はいらないらしい
 
     # ImageDataGeneratorを定義
     datagen = ImageDataGenerator(rotation_range=30,

@@ -11,3 +11,6 @@ tsutenkaku_discriminator/data/tsutenkaku/*
 tsutenkaku_discriminator/data/taiyo_no_to_valid/*
 tsutenkaku_discriminator/data/tsutenkaku_valid/*
 __pycache__/
+tsutenkaku_discriminator/data/data_generated_taiyo_no_to/
+tsutenkaku_discriminator/data/data_generated_tsutenkaku/
+tsutenkaku_discriminator/data/temp/
