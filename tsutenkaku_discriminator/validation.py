@@ -50,7 +50,7 @@ def evaluate(category):
 
     #評価用のデータの読み込み
     eval_X = np.load("./data/param/validation_data_test_X_250.npy").astype("float")/255
-    eval_Y = np.load("./data/param/validation_data_test_Y_250.npy").astype("float")/255
+    eval_Y = np.load("./data/param/validation_data_test_Y_250.npy").astype("float")
 
     #Yのデータをone-hotに変換
     

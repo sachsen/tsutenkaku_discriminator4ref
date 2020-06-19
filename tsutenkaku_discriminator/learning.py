@@ -38,7 +38,7 @@ class DataManager:
         Y = []
         for cat, fname in files:
             self.add_sample(cat, fname)
-        return np.array(X).astype(np.float16)/255, np.array(Y).astype(np.float16)/255 # ついでにデータの正規化をする。
+        return np.array(X).astype(np.float16)/255, np.array(Y) # ついでにデータの正規化をする。
 
     #渡された画像データを読み込んでXに格納し、また、
     #画像データに対応するcategoriesのidxをYに格納する関数
