@@ -173,6 +173,7 @@ class Learning:
         self.activation=activation
         self.mid_units=mid_units
         self.num_filters=num_filters
+        
         return model
         
         
@@ -196,7 +197,7 @@ class Learning:
 
         #optimizer
         optimizer = trial.suggest_categorical("optimizer", ["sgd", "adam", "rmsprop"])
-
+        self.optimizer=optimizer
         model = self.createModel(num_layer, activation, mid_units, num_filters)
         model.compile(optimizer=optimizer,
                 loss="binary_crossentropy",
@@ -247,7 +248,7 @@ class Learning:
         crlf="\n"
         
 
-        s = f'num_layer:{crlf}{self.num_layer}{crlf} activation:{crlf}{self.activation}{crlf} mid_units: {crlf} {self.mid_units}{crlf} num_filters:{crlf}{self.num_filters}{crlf} val_acc: {val_acc}{crlf}'
+        s = f'num_layer:{crlf}{self.num_layer}{crlf} activation:{crlf}{self.activation}{crlf} mid_units: {crlf} {self.mid_units}{crlf} num_filters:{crlf}{self.num_filters}{crlf} val_acc: {val_acc}{crlf} optimizer:{crlf}{self.optimizer}{crlf}'
 
         with open(path_w, mode='w') as f:
             f.write(s)

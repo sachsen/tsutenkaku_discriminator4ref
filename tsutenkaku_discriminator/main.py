@@ -39,12 +39,14 @@ class Prediction:
         x=np.asarray(img)
         x=np.array(x).astype(np.float)/255
         x = np.expand_dims(x, axis=0)
+        """
         y=[0]
         y=to_categorical(y,2)
         score = model.evaluate(x=x,y=y)
 
         print('loss=', score[0])
         print('accuracy=', score[1])
+        """
 
         #予測
         features = model.predict(x)
