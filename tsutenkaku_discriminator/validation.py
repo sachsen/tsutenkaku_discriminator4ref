@@ -26,8 +26,8 @@ def dataManage():
     #（categoriesのidxと、画像のファイルパスが紐づいたリストを生成）
     allfiles = []
     for idx, cat in enumerate(categories):
-        image_dir = root_dir + "/" + cat#+"_valid"
-        files = glob.glob(image_dir + "/*.jpg")
+        image_dir = root_dir + "/" + cat+"_valid"
+        files = glob.glob(image_dir + "/*.jpeg")
         for f in files:
             allfiles.append((idx, f))
 

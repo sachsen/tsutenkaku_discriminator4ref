@@ -57,13 +57,13 @@ class DataManager:
         self.count=0
         #カテゴリ配列の各値と、それに対応するidxを認識し、全データをallfilesにまとめる
         for idx, cat in enumerate(self.categories):
-            image_dir = self.root_dir + "/data_generated_" + cat #例えばdata/tsutenkaku
+            image_dir = self.root_dir + "/data_generated_" + cat #例えばdata/data_generated_tsutenkaku
             files = glob.glob(image_dir + "/*.jpeg") #ファイルの取得
             for f in files:
                 self.allfiles.append((idx, f))
                 self.count+=1
         for idx, cat in enumerate(self.categories):
-            image_dir = self.root_dir + "/" + cat #例えばdata/tsutenkaku
+            image_dir = self.root_dir + "/data_valid1_" + cat #例えばdata/tsutenkaku
             files = glob.glob(image_dir + "/*.jpeg") #ファイルの取得
             for f in files:
                 self.allfiles.append((idx, f))
@@ -77,7 +77,7 @@ class DataManager:
         random.shuffle(self.allfiles[self.count:])
         th = math.floor(len(self.allfiles) * 0.8)
         train = self.allfiles[0:self.count] #学習データ
-        test  = self.allfiles[self.count:] #学習データ
+        test  = self.allfiles[self.count:] #テストデータ
         X_train, y_train = self.make_sample(train) # X(画像np配列データ),Y(カテゴリーインデックス)
         X_test, y_test = self.make_sample(test)
         xy = (X_train, X_test, y_train, y_test)
@@ -183,13 +183,13 @@ class Learning:
 
         #最適化するパラメータの設定
         #畳込み層の数
-        num_layer = trial.suggest_int("num_layer", 3, 7)#3~7
+        num_layer = trial.suggest_int("num_layer", 1, 3)#1~3
 
         #FC(全結合)層のユニット数
         mid_units = int(trial.suggest_discrete_uniform("mid_units", 100, 500, 100))#第三引数はVBにおけるstep。間隔。
 
         #各畳込み層のフィルタ数
-        num_filters = [int(trial.suggest_discrete_uniform("num_filter_"+str(i), 32, 256, 32)) for i in range(num_layer)]
+        num_filters = [int(trial.suggest_discrete_uniform("num_filter_"+str(i), 32, 128, 32)) for i in range(num_layer)]
 
         #活性化関数
         activation = trial.suggest_categorical("activation", ["relu", "sigmoid", "tanh"])
@@ -257,7 +257,7 @@ class Learning:
         #studyオブジェクトの作成
         study = optuna.create_study()
         #最適化実行
-        study.optimize(self.objective, n_trials=100)#試行回数
+        study.optimize(self.objective, n_trials=10)#試行回数
         #最適化したハイパーパラメータの確認←これが一番知りたかったやつ。
         print(study.best_params)
         print(study.best_params["activation"])

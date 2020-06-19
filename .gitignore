@@ -1,6 +1,6 @@
 .idea/
 .vs/
-tsutenkaku_descriminator/tsutenkaku_descriminator.pyproj
+
 CodeGraphData/
 *.sln
 tsutenkaku_discriminator/data/graph_accuracy/*
@@ -14,3 +14,7 @@ __pycache__/
 tsutenkaku_discriminator/data/data_generated_taiyo_no_to/
 tsutenkaku_discriminator/data/data_generated_tsutenkaku/
 tsutenkaku_discriminator/data/temp/
+tsutenkaku_discriminator/data/data_valid1_tsutenkaku/
+tsutenkaku_discriminator/data/data_valid1_taiyo_no_to/
+tsutenkaku_discriminator/tsutenkaku_descriminator.pyproj
+*.7z
