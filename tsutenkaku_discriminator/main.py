@@ -5,6 +5,8 @@ from tensorflow.keras.models import model_from_json
 from tensorflow.keras.preprocessing import image
 import numpy as np
 import learning
+import os, glob
+from PIL import Image
 
 class Prediction:
     def predictTsutenkaku(self):
@@ -13,15 +15,22 @@ class Prediction:
         model = model_from_json(open('./data/param/optimizedModel.json').read())
         #保存した重みの読み込み
         model.load_weights('./data/param/optimizedModelWeight.hdf5')
-
+        model.summary()
         categories = ["通天閣","太陽の塔"]
 
         #画像を読み込む
         img_path = "./data/predictImg/face.jpg"
-        img = image.load_img(img_path,target_size=(250, 250, 3))
+        files = glob.glob(img_path) #ファイルの取得
+
+
+        img = Image.open(img_path)
+        img = img.convert("RGB")
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
-
+        img=self.expand2square(img, (0, 0, 0)).resize((250, 250), Image.LANCZOS)
+        x=np.asarray(img)
+        x=np.array(x).astype(np.float16)/255
+        x = np.expand_dims(x, axis=0)
         #予測
         features = model.predict(x)
 
@@ -31,6 +40,18 @@ class Prediction:
         else:
             print(f'{categories[0]}である確率が{features[0,0]}%、{categories[1]}である確率が{features[0,1]}%で、あなたの顔はどちらかというと{categories[1]}に似ています。')
 
+    def expand2square(self,pil_img, background_color):
+        width, height = pil_img.size
+        if width == height:
+            return pil_img
+        elif width > height:
+            result = Image.new(pil_img.mode, (width, width), background_color)
+            result.paste(pil_img, (0, (width - height) // 2))
+            return result
+        else:
+            result = Image.new(pil_img.mode, (height, height), background_color)
+            result.paste(pil_img, ((height - width) // 2, 0))
+            return result
 
 
 def main():
