@@ -17,7 +17,6 @@ class Prediction:
         model = model_from_json(open('./data/param/optimizedModel.json').read())
         with open("./data/param/bestparam.pickle", mode='rb') as f:
             bestparam = pickle.load(f)
-        print(bestparam)
         model.compile(optimizer=bestparam["optimizer"],
                 loss="binary_crossentropy",
                 metrics=["accuracy"])
@@ -25,10 +24,10 @@ class Prediction:
         model.load_weights('./data/param/optimizedModelWeight.hdf5')
         model.summary()
         
-        categories = ["太陽の塔","通天閣"]
+        categories = ["通天閣","太陽の塔"]
 
         #画像を読み込む
-        img_path = "./data/predictImg/face.jpg"
+        img_path = "./data/predictImg/face1.jpg"
         files = glob.glob(img_path) #ファイルの取得
 
 
@@ -40,12 +39,14 @@ class Prediction:
         x=np.asarray(img)
         x=np.array(x).astype(np.float)/255
         x = np.expand_dims(x, axis=0)
+        """
         y=[0]
         y=to_categorical(y,2)
         score = model.evaluate(x=x,y=y)
 
         print('loss=', score[0])
         print('accuracy=', score[1])
+        """
 
         #予測
         features = model.predict(x)
